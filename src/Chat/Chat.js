@@ -5,6 +5,7 @@ import ChatBox from './ChatBox/ChatBox';
 import ChatInput from './ChatInput/ChatInput';
 import shopData from '../data/shop.json';
 import answersData from '../data/answers.json';
+import { ROLE } from '../constants';
 
 class Chat extends Component {
   constructor(props, context) {
@@ -27,13 +28,44 @@ class Chat extends Component {
     }, 1000);
   }
 
+  handleCustomerMessage = (text) => {
+    return {
+      text: [text],
+      role: ROLE.CUSTOMER,
+    };
+  };
+
+  handleRobotMessage = (text) => {
+    let robotMessage = answersData.find((answer) => answer.tags.includes(text));
+    if (robotMessage === undefined) {
+      robotMessage = {
+        role: ROLE.ROBOT,
+        text: '无法识别，请联系人工客服~',
+      };
+    }
+    return robotMessage;
+  };
+
+  handleSetState = (message, time) => {
+    setTimeout(() => {
+      this.setState((prev) => ({
+        messages: prev.messages.concat(message),
+      }));
+    }, time);
+  };
+
+  handleChatMessage = (text) => {
+    this.handleSetState(this.handleCustomerMessage(text), 500);
+    this.handleSetState(this.handleRobotMessage(text), 1000);
+  };
+
   render() {
     const { shop, messages } = this.state;
     return (
       <main className="Chat">
         <ChatHeader shop={shop} />
         <ChatBox messages={messages} />
-        <ChatInput />
+        <ChatInput handleChatMessage={this.handleChatMessage} />
       </main>
     );
   }
